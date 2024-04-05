@@ -1,0 +1,126 @@
+<h2>Student Registration Form</h2>
+
+<div class="form-container">
+  <form #form="ngForm" class="example-form" (ngSubmit)="onSubmit(form)">
+
+    <mat-form-field class="example-full-width" [ngClass]="{'mat-form-field-invalid': nameInput.invalid && (nameInput.dirty || nameInput.touched)}">
+      <mat-label>Name</mat-label>
+      <input matInput placeholder="Enter your name" name="name" ngModel #nameInput="ngModel" [matTooltipDisabled]="!nameInput.invalid" [matTooltip]="'Not a Valid Name'" pattern="[a-zA-Z ]*" required>
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Date of Birth</mat-label>
+      <input matInput [matDatepicker]="picker" placeholder="Choose a date" (dateInput)="calculateAge($event)"
+        name="dateOfBirth" ngModel>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Age</mat-label>
+      <input matInput placeholder="Age" [(ngModel)]="age" name="age">
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width" [ngClass]="{'mat-form-field-invalid': emailInput.invalid && (emailInput.dirty || emailInput.touched)}">
+      <mat-label>Email</mat-label>
+      <input matInput placeholder="Enter your email" name="email" ngModel #emailInput="ngModel" [matTooltipDisabled]="!emailInput.invalid" [matTooltip]="'Not a Valid Email'" required pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}">
+      <!-- <mat-error *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)"> -->
+        <!-- Invalid email -->
+        <!-- <div matTooltip="Please provide a valid email address" matTooltipPosition="after">!</div> -->
+        
+      <!-- </mat-error> -->
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width" [ngClass]="{'mat-form-field-invalid': contactNumberInput.invalid && (contactNumberInput.dirty || contactNumberInput.touched)}">
+      <mat-label>Contact Number</mat-label>
+      <input matInput placeholder="Ex. 0123456789" name="contactNumber" ngModel #contactNumberInput="ngModel" [matTooltipDisabled]="!contactNumberInput.invalid" [matTooltip]="'Not a Valid Contact Number'" pattern="[0-9]{10}" required>
+      <!-- <mat-error *ngIf="contactNumberInput.invalid && (contactNumberInput.dirty || contactNumberInput.touched)">Contact number must be 10 digits</mat-error> -->
+    </mat-form-field>
+    
+
+    <mat-form-field class="example-full-width" [ngClass]="{'mat-form-field-invalid': addressLine1Input.invalid && (addressLine1Input.dirty || addressLine1Input.touched)}">
+      <mat-label>Address Line 1</mat-label>
+      <input matInput placeholder="Enter your address line 1" name="addressLine1" ngModel #addressLine1Input="ngModel"  [matTooltipDisabled]="!addressLine1Input.invalid" [matTooltip]="'Not a Valid Address'" pattern="[a-zA-Z0-9 ]*" required>
+      <!-- <mat-error *ngIf="addressLine1Input.invalid && (addressLine1Input.dirty || addressLine1Input.touched)">Address must be alphanumeric</mat-error> -->
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Address Line 2</mat-label>
+      <input matInput placeholder="Enter your address line 2" name="addressLine2" ngModel>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Select District</mat-label>
+      <mat-select (change)="onSelectDistrict($event)">
+        <mat-option *ngFor="let district of districts" [value]="district.id">{{ district.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    
+    <mat-form-field>
+      <mat-label>Select Taluk</mat-label>
+      <mat-select (change)="onSelectTaluk($event)">
+        <mat-option *ngFor="let taluk of selectedTalukOptions" [value]="taluk.id">{{ taluk.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    
+    <mat-form-field>
+      <mat-label>Select Village</mat-label>
+      <mat-select>
+        <mat-option *ngFor="let village of selectedVillageOptions" [value]="village.id">{{ village.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+
+    <mat-form-field class="example-full-width" [ngClass]="{'mat-form-field-invalid': postalPincodeInput.invalid && (postalPincodeInput.dirty || postalPincodeInput.touched)}">
+      <mat-label> Postal Pincode</mat-label>
+      <input matInput placeholder="Enter postal pincode" name="postalPincode" ngModel #postalPincodeInput="ngModel" [matTooltipDisabled]="!postalPincodeInput.invalid" [matTooltip]="'Not a Valid Pincode'" pattern="[0-9]{6}" required>
+      <!-- <mat-error *ngIf="postalPincodeInput.invalid && (postalPincodeInput.dirty || postalPincodeInput.touched)">Pincode must be 6 digits</mat-error> -->
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Tamil</mat-label>
+      <input matInput placeholder="Ex. 90" name="tamil" [(ngModel)]="tamil" (input)="calculateTotalAndAverage()">
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>English</mat-label>
+      <input matInput placeholder="Ex. 90" name="english" [(ngModel)]="english" (input)="calculateTotalAndAverage()">
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Maths</mat-label>
+      <input matInput placeholder="Ex. 90" name="maths" [(ngModel)]="maths" (input)="calculateTotalAndAverage()">
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Science</mat-label>
+      <input matInput placeholder="Ex. 90" name="science" [(ngModel)]="science" (input)="calculateTotalAndAverage()">
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Social</mat-label>
+      <input matInput placeholder="Ex. 90" name="social" [(ngModel)]="social" (input)="calculateTotalAndAverage()">
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Total Marks</mat-label>
+      <input matInput placeholder="Ex. 4" name="totalMarks" [(ngModel)]="totalMarks"  disabled>
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Average</mat-label>
+      <input matInput placeholder="Ex. 80%" name="average" [(ngModel)]="average" disabled>
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+      <mat-label>Result</mat-label>
+      <input matInput placeholder="Ex. Pass" name="result" [(ngModel)]="result" disabled>
+    </mat-form-field>
+
+    <div class="example-button-row">
+      <button type="submit" mat-raised-button >Submit</button>
+    
+    </div>
+
+  </form>
+</div>

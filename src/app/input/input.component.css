@@ -1,0 +1,28 @@
+.form-container {
+  display: flex;
+  justify-content: center;
+}
+
+.column {
+  flex: 1;
+  padding: 0 10px; /* Add some padding between columns */
+}
+
+.example-form {
+    min-width: 150px;
+    max-width: 500px;
+    width: 100%;
+  }
+
+.example-container mat-form-field + mat-form-field {
+  margin-left: 8px;
+}
+
+.example-button-row {
+  display: table-cell;
+  max-width: 600px;
+}
+
+.example-button-row .mat-mdc-button-base {
+  margin: 8px 8px 8px 0;
+}
