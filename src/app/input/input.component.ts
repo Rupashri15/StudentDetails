@@ -136,12 +136,19 @@ export class InputComponent implements OnInit {
     this.science = parseFloat(this.science.toString()) || 0;
     this.social = parseFloat(this.social.toString()) || 0;
 
-    this.totalMarks = this.tamil + this.english + this.maths + this.science + this.social;
-    this.average = this.totalMarks / 5; 
-      
-    this.result = this.average >= 40 ? 'Pass' : 'Fail'; 
-  }
-     
+    const marksArray = [this.tamil, this.english, this.maths, this.science, this.social];
+    const isAnyFail = marksArray.some(mark => mark < 35);
+
+    this.totalMarks = marksArray.reduce((total, mark) => total + mark, 0);
+    this.average = this.totalMarks / 5;
+
+    if (isAnyFail) {
+        this.result = 'Fail';
+    } else {
+        this.result = this.average >= 40 ? 'Pass' : 'Fail'; 
+    }
+}
+
 
   updateErrorMessage() {
     if (this.email.hasError('required')) {
