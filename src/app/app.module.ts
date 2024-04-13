@@ -20,15 +20,19 @@ import { SuccessPopupComponent } from './success-popup/success-popup.component';
 import { MatListModule } from '@angular/material/list';
 import { FetchComponent } from './fetch/fetch.component';
 import { MatTooltip } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon'; 
+import { MatTableModule } from '@angular/material/table';
+import { FailurePopupComponent } from './failure-popup/failure-popup.component';
+
 
 @NgModule({
   declarations: [
     AppComponent,
     InputComponent,
     SuccessPopupComponent,
-    FetchComponent,
-    
-  ],
+    FetchComponent, 
+    FailurePopupComponent  ],
+
   exports: [
     MatTooltip
   ],
@@ -49,7 +53,10 @@ import { MatTooltip } from '@angular/material/tooltip';
     MatFormFieldModule,
     MatDialogModule,
     MatListModule,
-    MatTooltip
+    MatTooltip,
+    MatIconModule,
+    MatTableModule,
+    
   ],
   providers: [
     provideClientHydration(),

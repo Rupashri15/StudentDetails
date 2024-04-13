@@ -10,6 +10,9 @@ import { StudentRecord } from '../services/StudentRecord.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { SuccessPopupComponent } from '../success-popup/success-popup.component';
 import { MatDialog } from '@angular/material/dialog';
+import { HttpClient } from '@angular/common/http';
+import { FailurePopupComponent } from '../failure-popup/failure-popup.component';
+
 
 
 
@@ -41,12 +44,19 @@ export class InputComponent implements OnInit {
   taluk!: { id: number; name: string; }[];
   name: any;
   contactNumber: any;
+  studentService: any;
+  students: any[] = [];
+  filteredStudents: any[] = []; 
+  searchQuery: string = '';
+  postalPincodeInput: any;
+  isSubmitted!: boolean;
+  selectedDistrict: string = ''; 
+  selectedTaluk: string = ''; 
+  selectedVillage: string = '';
 
-  
-  
 
   calculateAge(event: MatDatepickerInputEvent<Date>) {
-    if (event.value) {
+    if (event.value) {   
       this.dob = event.value;
       const today = new Date();
       const birthDate = new Date(this.dob);
@@ -60,51 +70,64 @@ export class InputComponent implements OnInit {
   }
 
 
-  constructor(public service: StudentRecord, private formBuilder: FormBuilder,private dialog: MatDialog) {
+  constructor(public service: StudentRecord, private formBuilder: FormBuilder,private dialog: MatDialog, private http: HttpClient) {
     merge(this.email.statusChanges, this.email.valueChanges)
-      .pipe(takeUntilDestroyed())
-   .subscribe(() => (this as any).updateErrorMessage()); 
+    .pipe(takeUntilDestroyed())
+    .subscribe(() => (this as any).updateErrorMessage()); 
+  }
+  
+  districts: string[] = [];
+  taluks: any[] = [];
+  villages: any[] = [];
+
+  ngOnInit(): void {
+   this.getDistrictValues();
+    this.fetchStudents();
+
+  }
+  getDistrictValues() {
+    this.service.getDistrict().subscribe({
+      next: (res: any) => {
+         console.log("District values ", res)
+         this.districts = res;
+      },
+      error: err => {
+         console.log(err);
+      }
+  });
+  }
+
+  onDistrictChange(district: string) {
+    console.log("Selected district ", district);
+    if(district){
+      this.service.getTaluksByDistrict(district).subscribe({
+        next: (res: any) => {
+          console.log("Taluks for selected district ", district, ":", res);
+          this.taluks = res;
+        },
+        error: err => {
+          console.log(err);
+        }
+      });
+    }
   }
 
   
 
-  //district:any=[];
-  //selectedTalukOptions: any[] = [];
-  //selectedVillageOptions: any[] = [];
-
-  //onSelect(district: any){
-    //console.log(district.target.value);
-    //this.taluk = this.service.taluk().filter(e=> e.id == district.target.value);
-    //console.log(this.taluk);
-  //}
-
-  districts: any[] = [];
-  selectedTalukOptions: any[] = [];
-  selectedVillageOptions: any[] = [];
-
-  ngOnInit(): void {
-    //this.service.refreshList();
-    this.districts = this.service.district();
-    console.log(this.districts);
+  onTalukChange(taluk: string) {
+    console.log("Selected taluk ", taluk);
+    this.service.getVillagesByTaluk(taluk).subscribe({
+      next: (res: any) => {
+        console.log("Villages for taluk ", taluk, ":", res);
+        this.villages = res;
+      },
+      error: err => {
+        console.log(err);
+      }
+    });
   }
 
-  onSelectDistrict(event: any){
-    console.log("district value", event.target.value);
-    const selectedDistrictId = event.target.value;
-    this.selectedTalukOptions = this.service.taluk().filter(taluk => taluk.districtId == selectedDistrictId);
-    this.selectedVillageOptions = [];
-  }
-
-  onSelectTaluk(event: any): void {
-    const selectedTalukId = event.target.value;
-    const selectedDistrictId = this.selectedDistrictId;
-    this.selectedVillageOptions = this.service.village().filter(village => village.talukId == selectedTalukId && village.districtId == selectedDistrictId);
-  }
-
-  get selectedDistrictId(): any {
-    return this.selectedTalukOptions.length > 0 ? this.selectedTalukOptions[0].districtId : null;
-  }
-
+  
   
   calculateTotalAndAverage() {
     this.tamil = parseFloat(this.tamil.toString()) || 0;
@@ -120,7 +143,6 @@ export class InputComponent implements OnInit {
   }
      
 
-
   updateErrorMessage() {
     if (this.email.hasError('required')) {
       this.errorMessage = 'You must enter a value';
@@ -132,7 +154,7 @@ export class InputComponent implements OnInit {
   }
 
 
-  onSubmit(form: NgForm) {
+  onSubmitMarks(form: NgForm) {
     if (form.valid) {
 
       this.calculateTotalAndAverage();
@@ -147,9 +169,9 @@ export class InputComponent implements OnInit {
         contactNumber: formData.contactNumber,
         addressLine1: formData.addressLine1,
         addressLine2: formData.addressLine2,
-        district: formData.district,
-        taluk: formData.taluk,
-        village: formData.village,
+        district: this.selectedDistrict || '', 
+        taluk: this.selectedTaluk || '', 
+        village: form.value.village || '',
         postalPincode: formData.postalPincode,
         tamil: formData.tamil,
         english: formData.english,
@@ -164,9 +186,11 @@ export class InputComponent implements OnInit {
       console.log("Request data ", request);
       this.service.postStudentRecord(request).subscribe({
         next: res => {
+          this.isSubmitted= true;
           console.log("Result of the student record ", res);
         },
         error: err => {
+          this.isSubmitted= false;
           console.log(err);
         }
       });
@@ -175,51 +199,15 @@ export class InputComponent implements OnInit {
     }
     else
     {
-
+        console.log("is not a valid form");
     }
-   // this.openSuccessPopup();
+   this.openSuccessPopup(form.value.name, form.value.contactNumber, this.isSubmitted);
   }
   
-//   openSuccessPopup(name: string, contactNumber: string): void {
-//   console.log("popup: ", name,contactNumber);
-//   const acknowledgmentNumber = this.generateAcknowledgmentNumber(name, contactNumber);
-//   const dialogRef = this.dialog.open(SuccessPopupComponent, {
-//   width: '400px',
-//   data: { acknowledgmentNumber } // Pass acknowledgment number to the dialog
-//   });
 
-//     // Optionally, handle dialog close event
-//     dialogRef.afterClosed().subscribe(result => {
-//       console.log('The dialog was closed');
-//     });
-//   }
-
-//   generateAcknowledgmentNumber(name: string, contactNumber: string) {
-//     this.service.getStudentId().subscribe({
-//         next: (res: any) => {
-//             if (typeof res === 'number') { // Check if 'res' is already a number
-//                 const nameAbbreviation = name.substring(0, 3).toUpperCase();
-//                 const middleDigits = contactNumber.substr(3, 3);
-//                 let nextAckNumber: number = res; // Assign 'res' to 'nextAckNumber'
-//                 const acknowledgmentNumber = `${nameAbbreviation}${middleDigits}${nextAckNumber}`;
-//                 nextAckNumber++; // Increment the auto increment number for the next submission
-                
-//                 console.log("Acknowledgment Number:", acknowledgmentNumber);
-//                 return acknowledgmentNumber;
-//             } else {
-//                 console.error("Error: Student ID is not a number.");
-//                 return null; // Return null or handle error case appropriately
-//             }
-//         },
-//         error: err => {
-//             console.log(err);
-//         }
-//     });
-// }
-
-async openSuccessPopup(name: string, contactNumber: string): Promise<void> {
-  console.log("popup: ", name, contactNumber);
-  
+async openSuccessPopup(name: string, contactNumber: string, isSubmitted: boolean): Promise<void> {
+  console.log("popup: ", name, contactNumber, isSubmitted);
+ // if(isSubmitted){
   try {
       const acknowledgmentNumber = await this.generateAcknowledgmentNumber(name, contactNumber);
       
@@ -228,7 +216,7 @@ async openSuccessPopup(name: string, contactNumber: string): Promise<void> {
           data: { acknowledgmentNumber } // Pass acknowledgment number to the dialog
       });
 
-      // Optionally, handle dialog close event
+      // handle dialog close event
       dialogRef.afterClosed().subscribe(result => {
           console.log('The dialog was closed');
       });
@@ -236,6 +224,13 @@ async openSuccessPopup(name: string, contactNumber: string): Promise<void> {
       console.error('Error occurred while generating acknowledgment number:', error);
       // Handle error appropriately, such as displaying an error message to the user
   }
+// }
+// else{
+//   const dialogRef = this.dialog.open(FailurePopupComponent, {
+//     width: '400px',
+//    // Pass acknowledgment number to the dialog
+// });
+// }
 }
 
 generateAcknowledgmentNumber(name: string, contactNumber: string): Promise<string> {
@@ -245,24 +240,76 @@ generateAcknowledgmentNumber(name: string, contactNumber: string): Promise<strin
               if (typeof res === 'number') {
                   const nameAbbreviation = name.substring(0, 3).toUpperCase();
                   const middleDigits = contactNumber.substr(3, 3);
-                  let nextAckNumber: number = res;
+                  let nextAckNumber: number = res +1;
                   const acknowledgmentNumber = `${nameAbbreviation}${middleDigits}${nextAckNumber}`;
-                  nextAckNumber++;
                   
                   console.log("Acknowledgment Number:", acknowledgmentNumber);
-                  resolve(acknowledgmentNumber); // Resolve with acknowledgment number
+                  resolve(acknowledgmentNumber); 
               } else {
                   console.error("Error: Student ID is not a number.");
-                  reject("Error: Student ID is not a number."); // Reject with error message
+                  reject("Error: Student ID is not a number."); 
               }
           },
           error: err => {
               console.error("Error occurred while fetching student ID:", err);
-              reject(err); // Reject with error object
+              reject(err); 
           }
       });
   });
 }
 
+ // Define students array with some sample data
+  public displayedColumns: string[] = ['studentId', 'name', 'contactNumber', 'district', 'taluk', 'village', 'action'];
+
+  public dataSource: any = [];
+  
+ 
+  fetchStudents(): void {
+    this.studentService.getStudents().subscribe(
+      (data: any) => {
+        this.students = data;
+        this.filteredStudents = [...this.students];
+      }, 
+      (error: any) => {
+        console.error('Error fetching students:', error);
+      }
+    );
+  }
+  
+  applyFilter(): void {
+    console.log("Search query ", this.searchQuery);
+    if(this.searchQuery){
+    this.service.getStudentRecordContact(this.searchQuery).subscribe(
+      (data: any) => {
+        this.students = data;
+        this.filteredStudents = [...this.students];
+      }, 
+      (error: any) => {
+        console.error('Error fetching students:', error);
+      }
+    );
+    
+
+  }
+  else {
+    this.filteredStudents = []; 
+  }
+  }
+
+
+  clearSearch(): void {
+    this.searchQuery = ''; 
+    this.applyFilter(); 
+  }
+
+
+editStudent(student: any) {
+  console.log('Editing student:', student);
+}
+
+
+deleteStudent(student: any) {
+  console.log('Deleting student:', student);
+}
 
 }
